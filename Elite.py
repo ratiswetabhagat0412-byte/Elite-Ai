@@ -7,12 +7,12 @@ from google.genai import types
 # Page styling & Title
 st.set_page_config(page_title="Ranesh Boss AI", page_icon="⚡", layout="centered")
 st.title("⚡ Ranesh Boss Turbo AI")
-st.caption("Serving Ranesh Boss • Connected via Secure Gateway")
+st.caption("Serving Ranesh Boss • Powered by Deep Neural Voice")
 
 # =========================================================================
 # 1. CLEAN API CLIENT SETUP (Points to the text label inside the locker)
 # =========================================================================
-API_KEY = st.secrets["AQ.Ab8RN6KL3A4haxKY4LkM_lNCccoluJr3t8bv-oO_G4bt_obKvw"]
+API_KEY = st.secrets["GEMINI_API_KEY"]
 
 client = genai.Client(api_key=API_KEY)
 # =========================================================================
