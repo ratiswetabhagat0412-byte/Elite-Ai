@@ -12,7 +12,7 @@ st.caption("Serving Ranesh Boss • Powered by Neural Fast Voice")
 # =========================================================================
 # 1. FIXED API CLIENT SETUP FOR STREAMLIT CLOUD (Bypasses the 401 bug)
 # =========================================================================
-API_KEY = st.secrets["GEMINI_API_KEY"]
+API_KEY = st.secrets["AQ.Ab8RN6KWkotFOr8HuXAB75323XgDEmKJnERd_VBBNKFK50i1hQ"]
 
 # We explicitly pass the key into the client options to override header formatting
 client = genai.Client(
