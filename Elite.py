@@ -7,18 +7,27 @@ from google.genai import types
 # Page styling & Title
 st.set_page_config(page_title="Ranesh Boss AI", page_icon="⚡", layout="centered")
 st.title("⚡ Ranesh Boss Turbo AI")
-st.caption("Serving Ranesh Boss • Powered by Neural Fast Voice")
+st.caption("Serving Ranesh Boss • Connected via Secure Gateway")
 
 # =========================================================================
-# 1. FIXED API CLIENT SETUP FOR STREAMLIT CLOUD (Bypasses the 401 bug)
+# 1. FIXED CLIENT FOR AUTH KEYS (Using the correct variable name pointer)
 # =========================================================================
-API_KEY = st.secrets["AQ.Ab8RN6KWkotFOr8HuXAB75323XgDEmKJnERd_VBBNKFK50i1hQ"]
+# This points to the label inside your Streamlit dashboard secrets box
+API_KEY = st.secrets["GEMINI_API_KEY"]
 
-# We explicitly pass the key into the client options to override header formatting
 client = genai.Client(
     api_key=API_KEY,
-    http_options={"headers": {"x-goog-api-key": API_KEY}}
+    http_options={
+        "headers": {
+            "x-goog-api-key": API_KEY,
+            "Authorization": f"Bearer {API_KEY}"
+        }
+    }
 )
+# =========================================================================
+
+# ... Keep your system prompt, heavy SourabhNeural voice function, and chat routing exactly the same ...
+
 # =========================================================================
 
 # ... Keep the rest of your system prompt and chat history code completely the same ...
