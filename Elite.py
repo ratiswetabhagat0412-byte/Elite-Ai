@@ -9,8 +9,19 @@ st.set_page_config(page_title="Ranesh Boss AI", page_icon="⚡", layout="centere
 st.title("⚡ Ranesh Boss Turbo AI")
 st.caption("Serving Ranesh Boss • Powered by Neural Fast Voice")
 
-# 1. API Client Setup (LEAVE BLANK NOW - It automatically pulls from Cloud Secrets)
-client = genai.Client()
+# =========================================================================
+# 1. FIXED API CLIENT SETUP FOR STREAMLIT CLOUD (Bypasses the 401 bug)
+# =========================================================================
+API_KEY = st.secrets["GEMINI_API_KEY"]
+
+# We explicitly pass the key into the client options to override header formatting
+client = genai.Client(
+    api_key=API_KEY,
+    http_options={"headers": {"x-goog-api-key": API_KEY}}
+)
+# =========================================================================
+
+# ... Keep the rest of your system prompt and chat history code completely the same ...
 
 # 2. System Instructions
 system_prompt = (
