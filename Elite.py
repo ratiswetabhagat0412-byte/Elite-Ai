@@ -9,9 +9,8 @@ st.set_page_config(page_title="Ranesh Boss AI", page_icon="⚡", layout="centere
 st.title("⚡ Ranesh Boss Turbo AI")
 st.caption("Serving Ranesh Boss • Powered by Neural Fast Voice")
 
-# 1. API Client Setup
-API_KEY = "AQ.Ab8RN6Ih1CGPihEIbD1hvS8lOeRGYjCx3foh7tGlmCf4eLxPag"
-client = genai.Client(api_key=API_KEY)
+# 1. API Client Setup (LEAVE BLANK NOW - It automatically pulls from Cloud Secrets)
+client = genai.Client()
 
 # 2. System Instructions
 system_prompt = (
