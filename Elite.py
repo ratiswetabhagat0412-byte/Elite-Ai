@@ -13,7 +13,7 @@ st.caption("Serving Ranesh Boss • Connected via Secure Gateway")
 # 1. FIXED CLIENT FOR AUTH KEYS (Using the correct variable name pointer)
 # =========================================================================
 # This points to the label inside your Streamlit dashboard secrets box
-API_KEY = st.secrets["GEMINI_API_KEY"]
+API_KEY = st.secrets["AQ.Ab8RN6KWkotFOr8HuXAB75323XgDEmKJnERd_VBBNKFK50i1hQ"]
 
 client = genai.Client(
     api_key=API_KEY,
