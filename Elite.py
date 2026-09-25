@@ -10,17 +10,11 @@ st.title("⚡ Ranesh Boss Turbo AI")
 st.caption("Serving Ranesh Boss • Connected via Secure Gateway")
 
 # =========================================================================
-# 1. FIXED CLIENT FOR SECURE VARIABLES (No raw strings in code!)
+# 1. CLEAN API CLIENT SETUP (Points to the text label inside the locker)
 # =========================================================================
-# Make sure line 15 uses the text pointer string label exactly like this:
-API_KEY = st.secrets["AQ.Ab8RN6Kzq_uwxGZDAtMvI0IAGRevQ7ZVhCGWjOhvpVKV5xOnYA"]
-
+API_KEY = st.secrets["GEMINI_API_KEY"]
 
 client = genai.Client(api_key=API_KEY)
-# =========================================================================
-
-# ... Keep the rest of your system prompt, SourabhNeural voice function, and chat routing exactly the same ...
-
 # =========================================================================
 
 # 2. System Instructions for Boss
@@ -38,7 +32,6 @@ async def generate_neural_speech(text_to_speak):
     try:
         clean_text = text_to_speak.replace("*", "").replace("#", "")
         # SourabhNeural: Heavy, bold, and mature Indian male voice
-        # pitch="-10Hz" adds bass to make it sound deeper and authoritative
         voice = "hi-IN-SourabhNeural"
         communicate = edge_tts.Communicate(clean_text, voice, rate="+5%", pitch="-10Hz")
         audio_data = bytearray()
