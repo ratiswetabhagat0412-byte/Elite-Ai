@@ -13,7 +13,7 @@ st.caption("Serving Ranesh Boss • Connected via Secure Gateway")
 # 1. FIXED CLIENT FOR SECURE VARIABLES (No raw strings in code!)
 # =========================================================================
 # Make sure line 15 uses the text pointer string label exactly like this:
-API_KEY = st.secrets["AQ.Ab8RN6Lv-plWiPwtJAOrh5YqjXMrRU5jmXfDFDTNqHpqXHB_VQ"]
+API_KEY = st.secrets["AQ.Ab8RN6Kzq_uwxGZDAtMvI0IAGRevQ7ZVhCGWjOhvpVKV5xOnYA"]
 
 
 client = genai.Client(api_key=API_KEY)
