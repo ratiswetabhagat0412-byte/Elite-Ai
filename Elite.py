@@ -1,13 +1,13 @@
 import streamlit as st
+import asyncio
+import edge_tts
 from google import genai
 from google.genai import types
-from gtts import gTTS
-import io
 
 # Page styling & Title
 st.set_page_config(page_title="Ranesh Boss AI", page_icon="⚡", layout="centered")
 st.title("⚡ Ranesh Boss Turbo AI")
-st.caption("Serving Ranesh Boss • 100% Reliable Native Voice")
+st.caption("Serving Ranesh Boss • Pure Neural Fast Voice Restored")
 
 # 1. API Client Setup
 API_KEY = st.secrets["GEMINI_API_KEY"]
@@ -23,25 +23,25 @@ system_prompt = (
     "Rule 4: Do not repeat previous questions. Answer directly without looping."
 )
 
-# 3. 100% Working Native Voice Function (gTTS Hindi-India Male Tone)
-def get_voice_audio(text_to_speak):
+# 3. Restored Fluent & Fast Madhur Neural TTS Function (Fixed Async Execution)
+async def generate_neural_speech(text_to_speak):
     try:
         clean_text = text_to_speak.replace("*", "").replace("#", "")
-        # Using Indian Accent for natural flow
-        tts = gTTS(text=clean_text, lang='hi', tld='co.in', slow=False)
-        audio_buffer = io.BytesIO()
-        tts.write_to_fp(audio_buffer)
-        audio_buffer.seek(0)
-        return audio_buffer
-    except Exception as e:
-        st.error(f"Voice Error: {e}")
+        # Rule: Restored the fast, fluent Madhur voice with +15% speed as preferred
+        voice = "hi-IN-MadhurNeural"
+        communicate = edge_tts.Communicate(clean_text, voice, rate="+15%")
+        audio_data = bytearray()
+        async for chunk in communicate.stream():
+            if chunk["type"] == "audio":
+                audio_data.extend(chunk["data"])
+        return bytes(audio_data)
+    except Exception:
         return None
 
-# 4. Chat History Initialization
+# 4. Chat History
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-# Display previous conversation
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
@@ -74,7 +74,7 @@ elif input_mode == "🎙️ Bolna (Mic Use Karein)":
                 mime_type="audio/wav"
             )
 
-# 6. Process Input, Stream Response & Play Audio
+# 6. Process & Stream Output
 if user_prompt:
     st.session_state.messages.append({"role": "user", "content": user_prompt})
     with st.chat_message("user"):
@@ -106,15 +106,19 @@ if user_prompt:
                     response_placeholder.markdown(full_response + "▌")
             response_placeholder.markdown(full_response)
             
-            # Generate stable native audio track
-            audio_stream = get_voice_audio(full_response)
-            if audio_stream:
-                st.audio(audio_stream, format="audio/mp3", autoplay=True)
+            # Executing the generator directly in the active event loop to ensure zero audio loss
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            audio_bytes = loop.run_until_complete(generate_neural_speech(full_response))
+            loop.close()
+            
+            if audio_bytes:
+                st.audio(audio_bytes, format="audio/mp3", autoplay=True)
             
             st.session_state.messages.append({
                 "role": "assistant", 
                 "content": full_response,
-                "audio": audio_stream
+                "audio": audio_bytes
             })
             
         except Exception as e:
