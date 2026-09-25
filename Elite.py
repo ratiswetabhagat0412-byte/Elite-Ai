@@ -1,15 +1,15 @@
 import streamlit as st
-import asyncio
-import edge_tts
 from google import genai
 from google.genai import types
+from gtts import gTTS
+import io
 
 # Page styling & Title
 st.set_page_config(page_title="Ranesh Boss AI", page_icon="⚡", layout="centered")
 st.title("⚡ Ranesh Boss Turbo AI")
-st.caption("Serving Ranesh Boss • Manual & Autoplay Audio Fixed")
+st.caption("Serving Ranesh Boss • 100% Reliable Native Voice")
 
-# 1. API Client Setup (Pulls safely from Streamlit Secrets Locker)
+# 1. API Client Setup
 API_KEY = st.secrets["GEMINI_API_KEY"]
 client = genai.Client(api_key=API_KEY)
 
@@ -20,32 +20,28 @@ system_prompt = (
     "(English for English, Hindi script for Hindi, Hinglish for Hinglish). "
     "Rule 2: Address the user respectfully as 'Ranesh' or 'Ranesh Boss'. "
     "Rule 3: Keep responses direct, expressive, and conversational. "
-    "Rule 4: Do not repeat previous questions. Answer directly without looping or giving unprompted city history."
+    "Rule 4: Do not repeat previous questions. Answer directly without looping."
 )
 
-# 3. Super Fluent & Deep Heavy Neural TTS Function
-async def generate_neural_speech(text_to_speak):
+# 3. 100% Working Native Voice Function (gTTS Hindi-India Male Tone)
+def get_voice_audio(text_to_speak):
     try:
         clean_text = text_to_speak.replace("*", "").replace("#", "")
-        # SourabhNeural: Heavy, bold, and mature Indian male voice
-        voice = "hi-IN-SourabhNeural"
-        communicate = edge_tts.Communicate(clean_text, voice, rate="+5%", pitch="-10Hz")
-        audio_data = bytearray()
-        async for chunk in communicate.stream():
-            if chunk["type"] == "audio":
-                audio_data.extend(chunk["data"])
-        return bytes(audio_data)
-    except Exception:
+        # Using Indian Accent for natural flow
+        tts = gTTS(text=clean_text, lang='hi', tld='co.in', slow=False)
+        audio_buffer = io.BytesIO()
+        tts.write_to_fp(audio_buffer)
+        audio_buffer.seek(0)
+        return audio_buffer
+    except Exception as e:
+        st.error(f"Voice Error: {e}")
         return None
-
-def get_voice_audio(text):
-    return asyncio.run(generate_neural_speech(text))
 
 # 4. Chat History Initialization
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-# Display previous conversation with their respective audio players
+# Display previous conversation
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
@@ -78,7 +74,7 @@ elif input_mode == "🎙️ Bolna (Mic Use Karein)":
                 mime_type="audio/wav"
             )
 
-# 6. Process Input, Stream Response & Render Audio Control
+# 6. Process Input, Stream Response & Play Audio
 if user_prompt:
     st.session_state.messages.append({"role": "user", "content": user_prompt})
     with st.chat_message("user"):
@@ -110,16 +106,15 @@ if user_prompt:
                     response_placeholder.markdown(full_response + "▌")
             response_placeholder.markdown(full_response)
             
-            # Generate the deep neural audio track
-            audio_bytes = get_voice_audio(full_response)
-            if audio_bytes:
-                # FIXED: This creates a beautiful, clickable play button right under the message text bubble!
-                st.audio(audio_bytes, format="audio/mp3", autoplay=True)
+            # Generate stable native audio track
+            audio_stream = get_voice_audio(full_response)
+            if audio_stream:
+                st.audio(audio_stream, format="audio/mp3", autoplay=True)
             
             st.session_state.messages.append({
                 "role": "assistant", 
                 "content": full_response,
-                "audio": audio_bytes
+                "audio": audio_stream
             })
             
         except Exception as e:
