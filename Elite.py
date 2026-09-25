@@ -7,13 +7,12 @@ from google.genai import types
 # Page styling & Title
 st.set_page_config(page_title="Ranesh Boss AI", page_icon="⚡", layout="centered")
 st.title("⚡ Ranesh Boss Turbo AI")
-st.caption("Serving Ranesh Boss • Connected via Secure Gateway")
+st.caption("Serving Ranesh Boss • Powered by Deep Neural Voice")
 
 # =========================================================================
-# 1. FIXED CLIENT FOR AUTH KEYS (Using the correct variable name pointer)
+# 1. FIXED API CLIENT SETUP (Direct Hardcoded Key Initialization)
 # =========================================================================
-# This points to the label inside your Streamlit dashboard secrets box
-API_KEY = st.secrets["AQ.Ab8RN6KWkotFOr8HuXAB75323XgDEmKJnERd_VBBNKFK50i1hQ"]
+API_KEY = "AQ.Ab8RN6KWkotFOr8HuXAB75323XgDEmKJnERd_VBBNKFK50i1hQ"
 
 client = genai.Client(
     api_key=API_KEY,
@@ -26,13 +25,7 @@ client = genai.Client(
 )
 # =========================================================================
 
-# ... Keep your system prompt, heavy SourabhNeural voice function, and chat routing exactly the same ...
-
-# =========================================================================
-
-# ... Keep the rest of your system prompt and chat history code completely the same ...
-
-# 2. System Instructions
+# 2. System Instructions for Boss
 system_prompt = (
     "You are a helpful AI assistant serving your Boss, Ranesh. "
     "Rule 1: Always respond in the EXACT same language the user uses "
@@ -48,7 +41,6 @@ async def generate_neural_speech(text_to_speak):
         clean_text = text_to_speak.replace("*", "").replace("#", "")
         # SourabhNeural: Heavy, bold, and mature Indian male voice
         # pitch="-10Hz" adds bass to make it sound deeper and authoritative
-        # rate="+5%" keeps it clean and snappy
         voice = "hi-IN-SourabhNeural"
         communicate = edge_tts.Communicate(clean_text, voice, rate="+5%", pitch="-10Hz")
         audio_data = bytearray()
@@ -58,6 +50,9 @@ async def generate_neural_speech(text_to_speak):
         return bytes(audio_data)
     except Exception:
         return None
+
+def get_voice_audio(text):
+    return asyncio.run(generate_neural_speech(text))
 
 # 4. Chat History
 if "messages" not in st.session_state:
@@ -127,7 +122,7 @@ if user_prompt:
                     response_placeholder.markdown(full_response + "▌")
             response_placeholder.markdown(full_response)
             
-            # Fast neural audio generate karna
+            # Fast neural audio generation
             audio_bytes = get_voice_audio(full_response)
             if audio_bytes:
                 st.audio(audio_bytes, format="audio/mp3", autoplay=True)
