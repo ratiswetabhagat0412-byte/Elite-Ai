@@ -12,7 +12,7 @@ st.caption("Serving Ranesh Boss • Connected via Secure Gateway")
 # =========================================================================
 # 1. CLEAN API CLIENT SETUP (Points to the text label inside the locker)
 # =========================================================================
-API_KEY = st.secrets["AQ.Ab8RN6Kzq_uwxGZDAtMvI0IAGRevQ7ZVhCGWjOhvpVKV5xOnYA"]
+API_KEY = st.secrets["AQ.Ab8RN6KL3A4haxKY4LkM_lNCccoluJr3t8bv-oO_G4bt_obKvw"]
 
 client = genai.Client(api_key=API_KEY)
 # =========================================================================
