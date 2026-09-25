@@ -7,22 +7,20 @@ from google.genai import types
 # Page styling & Title
 st.set_page_config(page_title="Ranesh Boss AI", page_icon="⚡", layout="centered")
 st.title("⚡ Ranesh Boss Turbo AI")
-st.caption("Serving Ranesh Boss • Powered by Deep Neural Voice")
+st.caption("Serving Ranesh Boss • Connected via Secure Gateway")
 
 # =========================================================================
-# 1. FIXED API CLIENT SETUP (Direct Hardcoded Key Initialization)
+# 1. FIXED CLIENT FOR SECURE VARIABLES (No raw strings in code!)
 # =========================================================================
-API_KEY = "AQ.Ab8RN6KWkotFOr8HuXAB75323XgDEmKJnERd_VBBNKFK50i1hQ"
+# Make sure line 15 uses the text pointer string label exactly like this:
+API_KEY = st.secrets["AQ.Ab8RN6Lv-plWiPwtJAOrh5YqjXMrRU5jmXfDFDTNqHpqXHB_VQ"]
 
-client = genai.Client(
-    api_key=API_KEY,
-    http_options={
-        "headers": {
-            "x-goog-api-key": API_KEY,
-            "Authorization": f"Bearer {API_KEY}"
-        }
-    }
-)
+
+client = genai.Client(api_key=API_KEY)
+# =========================================================================
+
+# ... Keep the rest of your system prompt, SourabhNeural voice function, and chat routing exactly the same ...
+
 # =========================================================================
 
 # 2. System Instructions for Boss
