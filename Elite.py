@@ -33,15 +33,15 @@ system_prompt = (
     "Rule 4: Do not repeat previous questions. Answer directly without looping or giving unprompted city history."
 )
 
-
-# 3. Super Fluent & Fast Neural TTS Function
+# 3. Super Fluent & Deep Heavy Neural TTS Function
 async def generate_neural_speech(text_to_speak):
     try:
         clean_text = text_to_speak.replace("*", "").replace("#", "")
-        # MadhurNeural: Most natural and fluent Hindi/Hinglish/Indian English voice
-        # rate="+15%" makes the speech fast and energetic
-        voice = "hi-IN-MadhurNeural"
-        communicate = edge_tts.Communicate(clean_text, voice, rate="+15%")
+        # SourabhNeural: Heavy, bold, and mature Indian male voice
+        # pitch="-10Hz" adds bass to make it sound deeper and authoritative
+        # rate="+5%" keeps it clean and snappy
+        voice = "hi-IN-SourabhNeural"
+        communicate = edge_tts.Communicate(clean_text, voice, rate="+5%", pitch="-10Hz")
         audio_data = bytearray()
         async for chunk in communicate.stream():
             if chunk["type"] == "audio":
@@ -49,9 +49,6 @@ async def generate_neural_speech(text_to_speak):
         return bytes(audio_data)
     except Exception:
         return None
-
-def get_voice_audio(text):
-    return asyncio.run(generate_neural_speech(text))
 
 # 4. Chat History
 if "messages" not in st.session_state:
