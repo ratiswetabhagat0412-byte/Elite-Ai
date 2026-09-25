@@ -7,15 +7,11 @@ from google.genai import types
 # Page styling & Title
 st.set_page_config(page_title="Ranesh Boss AI", page_icon="⚡", layout="centered")
 st.title("⚡ Ranesh Boss Turbo AI")
-st.caption("Serving Ranesh Boss • Powered by Deep Neural Voice")
+st.caption("Serving Ranesh Boss • Manual & Autoplay Audio Fixed")
 
-# =========================================================================
-# 1. CLEAN API CLIENT SETUP (Points to the text label inside the locker)
-# =========================================================================
+# 1. API Client Setup (Pulls safely from Streamlit Secrets Locker)
 API_KEY = st.secrets["GEMINI_API_KEY"]
-
 client = genai.Client(api_key=API_KEY)
-# =========================================================================
 
 # 2. System Instructions for Boss
 system_prompt = (
@@ -45,10 +41,11 @@ async def generate_neural_speech(text_to_speak):
 def get_voice_audio(text):
     return asyncio.run(generate_neural_speech(text))
 
-# 4. Chat History
+# 4. Chat History Initialization
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
+# Display previous conversation with their respective audio players
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
@@ -81,7 +78,7 @@ elif input_mode == "🎙️ Bolna (Mic Use Karein)":
                 mime_type="audio/wav"
             )
 
-# 6. Process & Speak
+# 6. Process Input, Stream Response & Render Audio Control
 if user_prompt:
     st.session_state.messages.append({"role": "user", "content": user_prompt})
     with st.chat_message("user"):
@@ -113,9 +110,10 @@ if user_prompt:
                     response_placeholder.markdown(full_response + "▌")
             response_placeholder.markdown(full_response)
             
-            # Fast neural audio generation
+            # Generate the deep neural audio track
             audio_bytes = get_voice_audio(full_response)
             if audio_bytes:
+                # FIXED: This creates a beautiful, clickable play button right under the message text bubble!
                 st.audio(audio_bytes, format="audio/mp3", autoplay=True)
             
             st.session_state.messages.append({
