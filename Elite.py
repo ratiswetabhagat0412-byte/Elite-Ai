@@ -140,7 +140,7 @@ if user_prompt_display and user_parts:
                 contents=payload_contents,
                 config=types.GenerateContentConfig(
                     system_instruction=system_prompt,
-                    tools=[types.Tool(google_search=types.GoogleSearch())]
+                    tools=[types.Tool(google_search=types.GoogleSearch())]  # <--- IS LINE KO
                 )
             )
 
