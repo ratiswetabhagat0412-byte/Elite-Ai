@@ -13,6 +13,9 @@ st.caption("Serving Boss • Pure Neural Fast Voice & Live Google Search")
 API_KEY = st.secrets["GEMINI_API_KEY"]
 client = genai.Client(api_key=API_KEY)
 
+# ✅ Yahan daal do:
+st.sidebar.caption(f"🔑 Key active: ...{API_KEY[-4:]}")
+
 # 2. System Instructions
 system_prompt = (
     "You are a helpful AI assistant serving your user, whom you must always address simply as 'Boss'. "
