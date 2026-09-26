@@ -136,10 +136,10 @@ if user_prompt_display and user_parts:
             payload_contents = st.session_state.gemini_history + [current_user_content]
 
             response = client.models.generate_content_stream(
-                model="gemini-2.5-flash",
+                model="gemini-3.8-flash",
                 contents=payload_contents,
                 config=types.GenerateContentConfig(
-                    system_instruction=system_prompt,
+                    system_instruction=system_prompt
                 )
             )
 
