@@ -6,29 +6,27 @@ import streamlit as st
 
 # Page Configuration
 st.set_page_config(page_title="Boss AI", page_icon="⚡", layout="centered")
-st.title("⚡ ELite AI")
-st.caption("Serving Boss • Pure Neural Fast Voice & Live Google Search")
+st.title("⚡ Boss Turbo AI")
+st.caption("Serving Boss • Pure Neural Fast Voice")
 
 # 1. API Client Setup
 API_KEY = st.secrets["GEMINI_API_KEY"]
 client = genai.Client(api_key=API_KEY)
 
-# ✅ Yahan daal do:
-st.sidebar.caption(f"🔑 Key active: ...{API_KEY[-4:]}")
-
-# 2. System Instructions
+# 2. System Instructions (Crisp and Direct for Turbo Speed)
 system_prompt = (
-    "You are a helpful AI assistant serving Boss. "
-    "Always address the user as 'Boss'. "
-    "Rule: Keep answers very brief, crisp, and direct (max 2-3 lines unless asked for details). "
-    "Respond in the exact same language (Hindi/English/Hinglish)."
-    "Rule 4: Do not repeat previous questions. Answer directly without looping. "
-    "Rule 5: Use Google Search automatically whenever up-to-date, factual, or real-world information is required."
+    "You are a helpful AI assistant serving your user, whom you must always address simply as 'Boss'. "
+    "Rule 1: Always respond in the EXACT same language the user uses "
+    "(English for English, Hindi script for Hindi, Hinglish for Hinglish). "
+    "Rule 2: Address the user respectfully as 'Boss'. Never use any other personal name. "
+    "Rule 3: Keep responses direct, crisp, and conversational (keep it brief unless Boss asks for detail). "
+    "Rule 4: Do not repeat previous questions. Answer directly without looping."
 )
 
 # 3. Sidebar Controls
 with st.sidebar:
     st.header("⚙️ Boss Settings")
+    st.caption(f"🔑 Key active: ...{API_KEY[-4:]}")
     enable_voice = st.toggle("🔊 Voice Response", value=True)
     voice_speed = st.slider("⚡ Voice Speed", min_value=0, max_value=30, value=15, step=5, format="+%d%%")
     selected_voice = st.selectbox(
@@ -41,7 +39,7 @@ with st.sidebar:
         st.session_state.gemini_history = []
         st.rerun()
 
-# 4. Neural Speech Generator
+# 4. Fast Neural Speech Generator
 async def generate_neural_speech(text_to_speak, voice, speed):
     try:
         clean_text = text_to_speak.replace("*", "").replace("#", "")
@@ -65,18 +63,10 @@ if "gemini_history" not in st.session_state:
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
-        if message.get("image"):
-            st.image(message["image"], caption="Uploaded Image", use_container_width=True)
-        if message.get("sources"):
-            with st.expander("🔍 Search Sources"):
-                for title, url in message["sources"]:
-                    st.markdown(f"- [{title}]({url})")
         if message.get("audio"):
             st.audio(message["audio"], format="audio/mp3")
 
-# 6. Inputs (Image / Text / Mic)
-uploaded_file = st.sidebar.file_uploader("📷 Share an image with Boss AI", type=["png", "jpg", "jpeg", "webp"])
-
+# 6. Inputs (Text & Mic Only)
 input_mode = st.radio(
     "👉 Kaise baat karna chahenge, Boss?",
     ["⌨️ Likhna (Type Karein)", "🎙️ Bolna (Mic Use Karein)"],
@@ -85,13 +75,6 @@ input_mode = st.radio(
 
 user_prompt_display = None
 user_parts = []
-uploaded_image_bytes = None
-
-if uploaded_file:
-    uploaded_image_bytes = uploaded_file.read()
-    user_parts.append(
-        types.Part.from_bytes(data=uploaded_image_bytes, mime_type=uploaded_file.type)
-    )
 
 if input_mode == "⌨️ Likhna (Type Karein)":
     chat_input = st.chat_input("Yahan apna sawaal type kijiye, Boss...")
@@ -115,20 +98,14 @@ elif input_mode == "🎙️ Bolna (Mic Use Karein)":
 
 # 7. Process & Stream Output
 if user_prompt_display and user_parts:
-    user_msg_entry = {"role": "user", "content": user_prompt_display}
-    if uploaded_image_bytes:
-        user_msg_entry["image"] = uploaded_image_bytes
-    st.session_state.messages.append(user_msg_entry)
+    st.session_state.messages.append({"role": "user", "content": user_prompt_display})
 
     with st.chat_message("user"):
         st.markdown(user_prompt_display)
-        if uploaded_image_bytes:
-            st.image(uploaded_image_bytes, caption="Uploaded Image", use_container_width=True)
 
     with st.chat_message("assistant"):
         response_placeholder = st.empty()
         full_response = ""
-        sources = []
 
         try:
             current_user_content = types.Content(role="user", parts=user_parts)
@@ -147,23 +124,9 @@ if user_prompt_display and user_parts:
                     full_response += chunk.text
                     response_placeholder.markdown(full_response + "▌")
 
-                if chunk.candidates and chunk.candidates[0].grounding_metadata:
-                    metadata = chunk.candidates[0].grounding_metadata
-                    if metadata.grounding_chunks:
-                        for gc in metadata.grounding_chunks:
-                            if gc.web and gc.web.uri:
-                                title = gc.web.title or gc.web.uri
-                                if (title, gc.web.uri) not in sources:
-                                    sources.append((title, gc.web.uri))
-
             response_placeholder.markdown(full_response)
 
-            if sources:
-                with st.expander("🔍 Search Sources"):
-                    for title, url in sources:
-                        st.markdown(f"- [{title}]({url})")
-
-           # ✅ Naya lightweight history save (Fast speed ke liye):
+            # Fast text-only history to prevent lag
             st.session_state.gemini_history.append(
                 types.Content(role="user", parts=[types.Part.from_text(text=user_prompt_display)])
             )
@@ -171,6 +134,7 @@ if user_prompt_display and user_parts:
                 types.Content(role="model", parts=[types.Part.from_text(text=full_response)])
             )
 
+            # Generate Neural Audio
             audio_bytes = None
             if enable_voice and full_response.strip():
                 loop = asyncio.new_event_loop()
@@ -186,16 +150,12 @@ if user_prompt_display and user_parts:
             st.session_state.messages.append({
                 "role": "assistant",
                 "content": full_response,
-                "sources": sources,
                 "audio": audio_bytes
             })
 
         except Exception as e:
             err_msg = str(e)
             if "429" in err_msg or "RESOURCE_EXHAUSTED" in err_msg:
-                st.error("⚠️ Quota limit hit! 1-2 minute wait karein ya naya API key use karein.")
+                st.error("⚠️ Quota limit hit! Kripya thoda wait karein ya API key check karein.")
             else:
                 st.error(f"Error: {e}")
-
-        except Exception as e:
-            st.error(f"Error: {e}")
