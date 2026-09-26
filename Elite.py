@@ -24,7 +24,7 @@ system_prompt = (
     "Rule 5: Use Google Search automatically whenever up-to-date, factual, or real-world information is required."
 )
 
-# 3. Sidebar Controls (Voice, Speed, Memory Management)
+# 3. Sidebar Controls
 with st.sidebar:
     st.header("⚙️ Boss Settings")
     enable_voice = st.toggle("🔊 Voice Response", value=True)
@@ -72,10 +72,9 @@ for message in st.session_state.messages:
         if message.get("audio"):
             st.audio(message["audio"], format="audio/mp3")
 
-# 6. Multimodal Inputs (Camera / Image attachment)
+# 6. Inputs (Image / Text / Mic)
 uploaded_file = st.sidebar.file_uploader("📷 Share an image with Boss AI", type=["png", "jpg", "jpeg", "webp"])
 
-# Input Mode Selector
 input_mode = st.radio(
     "👉 Kaise baat karna chahenge, Boss?",
     ["⌨️ Likhna (Type Karein)", "🎙️ Bolna (Mic Use Karein)"],
@@ -96,7 +95,8 @@ if input_mode == "⌨️ Likhna (Type Karein)":
     chat_input = st.chat_input("Yahan apna sawaal type kijiye, Boss...")
     if chat_input:
         user_prompt_display = chat_input
-        user_parts.append(chat_input)
+        user_parts.append(types.Part.from_text(text=chat_input))
+
 elif input_mode == "🎙️ Bolna (Mic Use Karein)":
     audio_data = st.audio_input("Mic dabakar boliye, Boss:")
     if audio_data is not None:
@@ -107,11 +107,12 @@ elif input_mode == "🎙️ Bolna (Mic Use Karein)":
             user_parts.append(
                 types.Part.from_bytes(data=audio_bytes, mime_type="audio/wav")
             )
-            user_parts.append("Listen carefully to this audio message from Boss and reply directly.")
+            user_parts.append(
+                types.Part.from_text(text="Listen carefully to this audio message from Boss and reply directly.")
+            )
 
 # 7. Process & Stream Output
-if user_prompt_display:
-    # Append user visual message
+if user_prompt_display and user_parts:
     user_msg_entry = {"role": "user", "content": user_prompt_display}
     if uploaded_image_bytes:
         user_msg_entry["image"] = uploaded_image_bytes
@@ -128,7 +129,6 @@ if user_prompt_display:
         sources = []
 
         try:
-            # Build conversation payload with history for full multi-turn context
             current_user_content = types.Content(role="user", parts=user_parts)
             payload_contents = st.session_state.gemini_history + [current_user_content]
 
@@ -146,7 +146,6 @@ if user_prompt_display:
                     full_response += chunk.text
                     response_placeholder.markdown(full_response + "▌")
 
-                # Extract live Google Search grounding links
                 if chunk.candidates and chunk.candidates[0].grounding_metadata:
                     metadata = chunk.candidates[0].grounding_metadata
                     if metadata.grounding_chunks:
@@ -163,13 +162,11 @@ if user_prompt_display:
                     for title, url in sources:
                         st.markdown(f"- [{title}]({url})")
 
-            # Store multi-turn state (text-only representation for the history pool)
             st.session_state.gemini_history.append(current_user_content)
             st.session_state.gemini_history.append(
                 types.Content(role="model", parts=[types.Part.from_text(text=full_response)])
             )
 
-            # Generate Neural Audio (if enabled in sidebar)
             audio_bytes = None
             if enable_voice and full_response.strip():
                 loop = asyncio.new_event_loop()
