@@ -132,9 +132,8 @@ if user_prompt_display and user_parts:
             current_user_content = types.Content(role="user", parts=user_parts)
             payload_contents = st.session_state.gemini_history + [current_user_content]
 
-            # Model updated to gemini-3.8-flash
-           response = client.models.generate_content_stream(
-                model="gemini-2.5-flash-lite",   # <--- ✅ YAHAN YE DAALO
+            response = client.models.generate_content_stream(
+                model="gemini-2.5-flash-lite",
                 contents=payload_contents,
                 config=types.GenerateContentConfig(
                     system_instruction=system_prompt,
@@ -186,6 +185,13 @@ if user_prompt_display and user_parts:
                 "sources": sources,
                 "audio": audio_bytes
             })
+
+        except Exception as e:
+            err_msg = str(e)
+            if "429" in err_msg or "RESOURCE_EXHAUSTED" in err_msg:
+                st.error("⚠️ Quota limit hit! 1-2 minute wait karein ya naya API key use karein.")
+            else:
+                st.error(f"Error: {e}")
 
         except Exception as e:
             st.error(f"Error: {e}")
