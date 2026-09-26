@@ -1,32 +1,42 @@
 import asyncio
+from datetime import datetime
 import edge_tts
 from google import genai
 from google.genai import types
+import pytz
 import streamlit as st
 
 # Page Configuration
 st.set_page_config(page_title="Boss AI", page_icon="⚡", layout="centered")
 st.title("⚡ Boss Turbo AI")
-st.caption("Serving Boss • Pure Neural Fast Voice")
+st.caption("Serving Boss • Pure Neural Fast Voice & Live Google Search")
 
 # 1. API Client Setup
 API_KEY = st.secrets["GEMINI_API_KEY"]
 client = genai.Client(api_key=API_KEY)
 
-# 2. System Instructions (Crisp and Direct for Turbo Speed)
+# 2. Live Current Date & Time Setup (India Timezone IST)
+ist_timezone = pytz.timezone("Asia/Kolkata")
+current_now = datetime.now(ist_timezone)
+current_date_str = current_now.strftime("%A, %d %B %Y, %I:%M %p IST")
+
+# System Instructions with live time context
 system_prompt = (
     "You are a helpful AI assistant serving your user, whom you must always address simply as 'Boss'. "
+    f"IMPORTANT CONTEXT: Current real-world Date and Time right now is: {current_date_str}. "
     "Rule 1: Always respond in the EXACT same language the user uses "
     "(English for English, Hindi script for Hindi, Hinglish for Hinglish). "
     "Rule 2: Address the user respectfully as 'Boss'. Never use any other personal name. "
-    "Rule 3: Keep responses direct, crisp, and conversational (keep it brief unless Boss asks for detail). "
-    "Rule 4: Do not repeat previous questions. Answer directly without looping."
+    "Rule 3: Keep responses direct, crisp, and conversational. "
+    "Rule 4: Do not repeat previous questions. Answer directly without looping. "
+    "Rule 5: Use Google Search whenever real-time facts, news, or fresh live info is required."
 )
 
 # 3. Sidebar Controls
 with st.sidebar:
     st.header("⚙️ Boss Settings")
     st.caption(f"🔑 Key active: ...{API_KEY[-4:]}")
+    enable_search = st.toggle("🔍 Google Search Grounding", value=True)
     enable_voice = st.toggle("🔊 Voice Response", value=True)
     voice_speed = st.slider("⚡ Voice Speed", min_value=0, max_value=30, value=15, step=5, format="+%d%%")
     selected_voice = st.selectbox(
@@ -63,6 +73,10 @@ if "gemini_history" not in st.session_state:
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
+        if message.get("sources"):
+            with st.expander("🔍 Search Sources"):
+                for title, url in message["sources"]:
+                    st.markdown(f"- [{title}]({url})")
         if message.get("audio"):
             st.audio(message["audio"], format="audio/mp3")
 
@@ -106,37 +120,48 @@ if user_prompt_display and user_parts:
     with st.chat_message("assistant"):
         response_placeholder = st.empty()
         full_response = ""
+        sources = []
 
         try:
             current_user_content = types.Content(role="user", parts=user_parts)
             payload_contents = st.session_state.gemini_history + [current_user_content]
 
-            # Try primary model first, fallback if 503 high demand occurs
-            try:
-                response = client.models.generate_content_stream(
-                    model="gemini-3.8-flash",
-                    contents=payload_contents,
-                    config=types.GenerateContentConfig(system_instruction=system_prompt)
+            # Google Search tools toggle
+            tools_list = [types.Tool(google_search=types.GoogleSearch())] if enable_search else None
+
+            # Stream generation with primary model
+            response = client.models.generate_content_stream(
+                model="gemini-3.8-flash",
+                contents=payload_contents,
+                config=types.GenerateContentConfig(
+                    system_instruction=system_prompt,
+                    tools=tools_list
                 )
-            except Exception as model_err:
-                if "503" in str(model_err):
-                    # Backup model agar 3.8 busy ho
-                    response = client.models.generate_content_stream(
-                        model="gemini-2.5-flash",
-                        contents=payload_contents,
-                        config=types.GenerateContentConfig(system_instruction=system_prompt)
-                    )
-                else:
-                    raise model_err
+            )
 
             for chunk in response:
                 if chunk.text:
                     full_response += chunk.text
                     response_placeholder.markdown(full_response + "▌")
 
+                # Extract live Search Sources
+                if chunk.candidates and chunk.candidates[0].grounding_metadata:
+                    metadata = chunk.candidates[0].grounding_metadata
+                    if metadata.grounding_chunks:
+                        for gc in metadata.grounding_chunks:
+                            if gc.web and gc.web.uri:
+                                title = gc.web.title or gc.web.uri
+                                if (title, gc.web.uri) not in sources:
+                                    sources.append((title, gc.web.uri))
+
             response_placeholder.markdown(full_response)
 
-            # Fast text-only history to prevent lag
+            if sources:
+                with st.expander("🔍 Search Sources"):
+                    for title, url in sources:
+                        st.markdown(f"- [{title}]({url})")
+
+            # Save clean text to history
             st.session_state.gemini_history.append(
                 types.Content(role="user", parts=[types.Part.from_text(text=user_prompt_display)])
             )
@@ -160,12 +185,15 @@ if user_prompt_display and user_parts:
             st.session_state.messages.append({
                 "role": "assistant",
                 "content": full_response,
+                "sources": sources,
                 "audio": audio_bytes
             })
 
         except Exception as e:
             err_msg = str(e)
             if "429" in err_msg or "RESOURCE_EXHAUSTED" in err_msg:
-                st.error("⚠️ Quota limit hit! Kripya thoda wait karein ya API key check karein.")
+                st.error("⚠️ Quota limit hit! Sidebar se 'Google Search Grounding' band karke try karein.")
+            elif "503" in err_msg or "UNAVAILABLE" in err_msg:
+                st.error("⚠️ Server busy hai, kripya kuch second baad dobara try karein.")
             else:
                 st.error(f"Error: {e}")
