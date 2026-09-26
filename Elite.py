@@ -6,7 +6,7 @@ import streamlit as st
 
 # Page Configuration
 st.set_page_config(page_title="Boss AI", page_icon="⚡", layout="centered")
-st.title("⚡ Boss Turbo AI")
+st.title("⚡ ELite AI")
 st.caption("Serving Boss • Pure Neural Fast Voice & Live Google Search")
 
 # 1. API Client Setup
