@@ -3,11 +3,7 @@ from datetime import datetime
 import edge_tts
 from google import genai
 from google.genai import types
-# ❌ Yeh hata do:
-# import pytz
-
-# ✅ Yeh likho (Built-in standard library):
-from zoneinfo import ZoneInfo
+import pytz
 import streamlit as st
 
 # Page Configuration
