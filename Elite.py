@@ -18,11 +18,10 @@ st.sidebar.caption(f"🔑 Key active: ...{API_KEY[-4:]}")
 
 # 2. System Instructions
 system_prompt = (
-    "You are a helpful AI assistant serving your user, whom you must always address simply as 'Boss'. "
-    "Rule 1: Always respond in the EXACT same language the user uses "
-    "(English for English, Hindi script for Hindi, Hinglish for Hinglish). "
-    "Rule 2: Address the user respectfully as 'Boss'. Never use any other personal name. "
-    "Rule 3: Keep responses direct, expressive, crisp, and conversational. "
+    "You are a helpful AI assistant serving Boss. "
+    "Always address the user as 'Boss'. "
+    "Rule: Keep answers very brief, crisp, and direct (max 2-3 lines unless asked for details). "
+    "Respond in the exact same language (Hindi/English/Hinglish)."
     "Rule 4: Do not repeat previous questions. Answer directly without looping. "
     "Rule 5: Use Google Search automatically whenever up-to-date, factual, or real-world information is required."
 )
@@ -164,7 +163,10 @@ if user_prompt_display and user_parts:
                     for title, url in sources:
                         st.markdown(f"- [{title}]({url})")
 
-            st.session_state.gemini_history.append(current_user_content)
+           # ✅ Naya lightweight history save (Fast speed ke liye):
+            st.session_state.gemini_history.append(
+                types.Content(role="user", parts=[types.Part.from_text(text=user_prompt_display)])
+            )
             st.session_state.gemini_history.append(
                 types.Content(role="model", parts=[types.Part.from_text(text=full_response)])
             )
