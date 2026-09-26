@@ -1,13 +1,13 @@
-import streamlit as st
 import asyncio
 import edge_tts
 from google import genai
 from google.genai import types
+import streamlit as st
 
 # Page styling & Title
 st.set_page_config(page_title="Ranesh Boss AI", page_icon="⚡", layout="centered")
 st.title("⚡ Ranesh Boss Turbo AI")
-st.caption("Serving Ranesh Boss • Pure Neural Fast Voice Restored")
+st.caption("Serving Ranesh Boss • Pure Neural Fast Voice & Live Google Search Restored")
 
 # 1. API Client Setup
 API_KEY = st.secrets["GEMINI_API_KEY"]
@@ -20,14 +20,14 @@ system_prompt = (
     "(English for English, Hindi script for Hindi, Hinglish for Hinglish). "
     "Rule 2: Address the user respectfully as 'Ranesh' or 'Ranesh Boss'. "
     "Rule 3: Keep responses direct, expressive, and conversational. "
-    "Rule 4: Do not repeat previous questions. Answer directly without looping."
+    "Rule 4: Do not repeat previous questions. Answer directly without looping. "
+    "Rule 5: Use Google Search automatically whenever up-to-date, factual, or detailed real-world information is required."
 )
 
-# 3. Restored Fluent & Fast Madhur Neural TTS Function (Fixed Async Execution)
+# 3. Restored Fluent & Fast Madhur Neural TTS Function
 async def generate_neural_speech(text_to_speak):
     try:
         clean_text = text_to_speak.replace("*", "").replace("#", "")
-        # Rule: Restored the fast, fluent Madhur voice with +15% speed as preferred
         voice = "hi-IN-MadhurNeural"
         communicate = edge_tts.Communicate(clean_text, voice, rate="+15%")
         audio_data = bytearray()
@@ -45,7 +45,11 @@ if "messages" not in st.session_state:
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
-        if "audio" in message and message["audio"]:
+        if message.get("sources"):
+            with st.expander("🔍 Search Sources"):
+                for title, url in message["sources"]:
+                    st.markdown(f"- [{title}]({url})")
+        if message.get("audio"):
             st.audio(message["audio"], format="audio/mp3")
 
 # 5. Input Mode Selector
@@ -83,6 +87,7 @@ if user_prompt:
     with st.chat_message("assistant"):
         response_placeholder = st.empty()
         full_response = ""
+        sources = []
         
         try:
             if audio_bytes_payload:
@@ -93,20 +98,40 @@ if user_prompt:
             else:
                 contents_to_send = user_prompt
 
+            # Enable Google Search grounding tool
             response = client.models.generate_content_stream(
-                model="gemini-3.5-flash-lite",
+                model="gemini-2.5-flash",
                 contents=contents_to_send,
                 config=types.GenerateContentConfig(
-                    system_instruction=system_prompt
+                    system_instruction=system_prompt,
+                    tools=[types.Tool(google_search=types.GoogleSearch())]
                 )
             )
+
             for chunk in response:
                 if chunk.text:
                     full_response += chunk.text
                     response_placeholder.markdown(full_response + "▌")
+                
+                # Extract grounding metadata / source URLs if Google Search was triggered
+                if chunk.candidates and chunk.candidates[0].grounding_metadata:
+                    metadata = chunk.candidates[0].grounding_metadata
+                    if metadata.grounding_chunks:
+                        for gc in metadata.grounding_chunks:
+                            if gc.web and gc.web.uri:
+                                title = gc.web.title or gc.web.uri
+                                if (title, gc.web.uri) not in sources:
+                                    sources.append((title, gc.web.uri))
+
             response_placeholder.markdown(full_response)
+
+            # Display web sources under an expander if search was used
+            if sources:
+                with st.expander("🔍 Search Sources"):
+                    for title, url in sources:
+                        st.markdown(f"- [{title}]({url})")
             
-            # Executing the generator directly in the active event loop to ensure zero audio loss
+            # Generate Audio
             loop = asyncio.new_event_loop()
             asyncio.set_event_loop(loop)
             audio_bytes = loop.run_until_complete(generate_neural_speech(full_response))
@@ -118,6 +143,7 @@ if user_prompt:
             st.session_state.messages.append({
                 "role": "assistant", 
                 "content": full_response,
+                "sources": sources,
                 "audio": audio_bytes
             })
             
